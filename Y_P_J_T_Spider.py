@@ -1,4 +1,6 @@
 import requests
+import re
+import copy
 from lxml import etree
 
 
@@ -76,14 +78,60 @@ class SpiderYun(object):
         for parse_url in ticket_url:
             detail_html = self._parseUrl(parse_url)
             detail_html_elements = etree.HTML(detail_html)
-            detail_data = detail_html_elements.xpath("//div[@class='left R_seeLeft R_marginLeft1 R_marginTop50']//dl//text()")
+            detail_data = detail_html_elements.xpath("//div[@class='left R_seeLeft R_marginLeft1 R_marginTop50']//dd//text()")
             print(detail_data)
-            return
-        pass
+            return detail_data
 
-    def _trimTicketInfo(self):
-        '''整理数据'''
-        pass
+    def _trimTicketInfo(self, data):
+
+        '''整理数据, 返回新列表'''
+        re_data_list = copy.deepcopy(data)
+        for r in data:
+            try:
+                data_re = re.search('\d+\W\d+\W\d+', r).group()
+                data_re_a = re.search(r'\d+.\d+', r).group()
+                data_re_b = re.search('\d+', r).group()
+                if data_re:
+                    print(data_re)
+                    re_data_list[re_data_list.index(r)] = data_re
+                elif data_re_a:
+                    print(data_re_a)
+                    re_data_list[re_data_list.index(r)] = data_re_a
+                elif data_re_b:
+                    print(data_re_b)
+                    re_data_list[re_data_list.index(r)] = data_re_b
+                else:
+                    pass
+
+            except Exception as e:
+                print(e)
+        print("re匹配过的数据", re_data_list)
+        new_data_list = []
+        for i in data:
+            data_str = i.strip()
+            # print(data_str)
+            # if data_str == '':
+            #     continue
+            # else:
+            new_data_list.append(data_str)
+        new_data_dict = {}
+        title_list = [
+        "bill_type", # 票据类型
+        "transferability", # 是否可转让
+        "bill_sum", # 票据金额
+        "start_time", # 出票日期
+        "end_time", # 汇票到期日
+        "remain_day", # 剩余天数
+        "bank_type", # 承兑银行类型
+        "except_rate", # 期望利率
+        "except_sum" # 期望金额
+        ]
+        for i in range(9):
+            new_data_dict[title_list[i]] = new_data_list[i]
+
+
+        print("整理好的数据为：", new_data_dict)
+        # return new_data_list
 
     def _ticketSave(self):
         '''保存信息'''
@@ -92,24 +140,14 @@ class SpiderYun(object):
     def run(self):
         '''启动程序'''
         # 获取ticket路径信息
-        ticket_path = self._getTicketUrl()
+        # ticket_path = self._getTicketUrl()
         # 拼接票据URL
-        url_list = self._configTicketUrl(ticket_path)
+        # url_list = self._configTicketUrl(ticket_path)
         # 获取票据数据
-        self._getTicketInfo(url_list)
-
+        # data = self._getTicketInfo(url_list)
+        data = ['电银', '是', '100万元', '2018-11-14', '2019-05-14', '76天 ', '国股', '\r\n                      3.21%', '993223.33元']
+        # 整理数据并返回
+        self._trimTicketInfo(data)
 
 if __name__ == '__main__':
     SpiderYun().run()
-
-
-
-
-
-
-
-
-
-
-
-
