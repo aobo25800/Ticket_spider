@@ -10,26 +10,23 @@ headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.3
 response = requests.get(url, headers=headers)
 response.encoding = 'utf-8'
 #
-content = response.text
-#
+content = response.text[5110:-14899]
+
+
 print("content类型", type(content), "content内容为：", content)
 html = etree.HTML(content)
 
-# content = '''<div> <ul>
-#         <li class="item-1"><a>first item</a></li>
-#         <li class="item-1"><a href="link2.html">second item</a></li>
-#         <li class="item-inactive"><a href="link3.html">third item</a></li>
-#         <li class="item-1"><a href="link4.html">fourth item</a></li>
-#         <li class="item-0"><a href="link5.html">fifth item</a>
-#         </ul> </div>'''
-# html = etree.HTML(content)
-
-print("_html对象：", html)
+# print("_html对象：", html)
 
 div_list = html.xpath("//div[@class='left R_seeLeft R_marginLeft1 R_marginTop50']//dl[8]//span/text()")
-# li_list = html.xpath("//li[@class='item-1']")
-#
-print("div_list内容为：", div_list)
+
+x = div_list[0].replace(' ', '')
+
+y = x.replace('\r\n','')
+print(y)
+div_li = []
+div_li.append(y)
+print(type(y),"div_list内容为：", div_li)
 #
 # for li in li_list:
 #     item = {}

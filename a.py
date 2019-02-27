@@ -67,5 +67,5 @@ class TieBaSpider:
 
 if __name__ == '__main__':
 
-    tieba = TieBaSpider("传智播客")
+    tieba = TieBaSpider("贴吧")
     tieba.run()
