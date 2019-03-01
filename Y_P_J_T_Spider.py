@@ -54,16 +54,35 @@ class SpiderYun(object):
         for parse_url in ticket_url:
             detail_html = self._parseUrl(parse_url)
             detail_html_elements = etree.HTML(detail_html)
-            detail_data = detail_html_elements.xpath("//div[@class='left R_seeLeft R_marginLeft1 R_marginTop50']//dd//text()")
             detail_title_data = detail_html_elements.xpath("//div[@class='R_seulp1 R_fontSize3 R_marginBot']//text()")
             # print("detail_title_data信息为", detail_title_data, "类型", type(detail_title_data))
             detail_title_data = [x.strip() for x in detail_title_data if x.strip()!='']
             # print("mytest信息为", detail_title_data, "类型", type(detail_title_data))
-            detail_data.extend(detail_title_data)
-            # print("detail_data信息为", detail_data, "类型", type(detail_data))
-            # print("detail_title_data信息为", detail_title_data, "类型", type(detail_title_data))
-            self._trimTicketInfo(detail_data)
 
+            list_data = []
+            for i in range(1, 10):
+
+                html_data = detail_html_elements.xpath("/html/body/div[4]/div[2]/dl[%d]//text()" % i)
+                # print(html_data)
+                detail_data = [x.strip() for x in html_data if x.strip() != '']
+
+                if "电商" in detail_data or '议价' in detail_data:
+                    list_data = []
+                    break
+
+                else:
+                    list_data.append(detail_data)
+            list_data_info = []
+            for i in list_data:
+                list_data_info.append(i[1])
+
+            if list_data:
+                list_data_info.extend(detail_title_data)
+                if len(list_data_info) == 11:
+                    self._trimTicketInfo(list_data_info)
+                # return
+            else:
+                continue
 
     def _trimTicketInfo(self, data):
 
@@ -100,11 +119,10 @@ class SpiderYun(object):
         "send_date" # 发布时间
         ]
         print("基本值", re_data_list)
-        try:
-            for i in range(11):
-                new_data_dict[title_list[i]] = re_data_list[i]
-        except Exception as e:
-            print(e)
+
+        for i in range(11):
+            new_data_dict[title_list[i]] = re_data_list[i]
+
 
         print("整理好的数据为：", new_data_dict)
         self._ticketSave(new_data_dict)
@@ -132,6 +150,8 @@ class SpiderYun(object):
 
 if __name__ == '__main__':
     x = 1
-    while x<= 41:
+    while x<= 44:
         SpiderYun(x).run()
         x += 1
+
+    # SpiderYun(1).run()
