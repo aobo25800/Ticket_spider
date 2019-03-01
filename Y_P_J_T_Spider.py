@@ -1,6 +1,7 @@
 import requests
 import re
 import copy
+from time import sleep
 from pymongo import MongoClient
 from lxml import etree
 
@@ -10,9 +11,12 @@ db = client.YCKT_DATA
 
 class SpiderYun(object):
 
-    def __init__(self):
+    def __init__(self, num):
+        self.num = num
+        print("下一页的页面为", self.num)
+        sleep(1)
         self.headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"}
-        self.url_all_ticket = 'http://www.cpiaoju.com/Draft'
+        self.url_all_ticket = 'http://www.cpiaoju.com/draft?&page=%s' % self.num
         self.url_base = 'http://www.cpiaoju.com'
         self.ticket_INFO = db.ticket_INFO_YPJ
 
@@ -28,7 +32,6 @@ class SpiderYun(object):
         # print("使用set去重结果：", elements_set, "\n\t\t长度为：%s", len(elements_set))
         elements_set_list = list(elements_set)
         # print("去重后的URL路径列表：", elements_set_list, "\n\t\t长度为：%s", len(elements_set_list))
-
         return elements_set_list
 
     def _parseUrl(self,url):
@@ -48,7 +51,6 @@ class SpiderYun(object):
 
     def _getTicketInfo(self, ticket_url):
         '''获取票据数据'''
-        ticket_info = []
         for parse_url in ticket_url:
             detail_html = self._parseUrl(parse_url)
             detail_html_elements = etree.HTML(detail_html)
@@ -62,6 +64,7 @@ class SpiderYun(object):
             # print("detail_title_data信息为", detail_title_data, "类型", type(detail_title_data))
             self._trimTicketInfo(detail_data)
 
+
     def _trimTicketInfo(self, data):
 
         '''整理数据, 返回新列表'''
@@ -69,9 +72,16 @@ class SpiderYun(object):
         for r in data:
             a = r.strip()
             if a[:1].isdigit():
-                print(a)
-                b = re.search(r'^[0-9.-]*', a).group()
+                # print(a)
+                b = re.search('[0-9.-]*', a).group()
                 re_data_list[re_data_list.index(r)] = b
+            elif a[-1:].isdigit():
+                b = re.findall('[0-9.-]*', a)
+                for x in b:
+                    if x != '':
+                        re_data_list[re_data_list.index(r)] = str(x)
+                    else:
+                        continue
             else:
                 continue
         # print("re匹配过的数据", re_data_list)
@@ -89,12 +99,16 @@ class SpiderYun(object):
         "accept_bank", # 承兑银行
         "send_date" # 发布时间
         ]
-        for i in range(11):
-            new_data_dict[title_list[i]] = re_data_list[i]
-
+        print("基本值", re_data_list)
+        try:
+            for i in range(11):
+                new_data_dict[title_list[i]] = re_data_list[i]
+        except Exception as e:
+            print(e)
 
         print("整理好的数据为：", new_data_dict)
         self._ticketSave(new_data_dict)
+
         # return new_data_list
 
     def _ticketSave(self, ticket_DATA):
@@ -102,17 +116,22 @@ class SpiderYun(object):
         post_id = self.ticket_INFO.insert_one(ticket_DATA).inserted_id
         print("post id is ", post_id)
 
+
     def run(self):
         '''启动程序'''
+        # while True:
         # 获取ticket路径信息
         ticket_path = self._getTicketUrl()
         # # 拼接票据URL
         url_list = self._configTicketUrl(ticket_path)
         # # 获取票据数据
-        data = self._getTicketInfo(url_list)
+        self._getTicketInfo(url_list)
         # data = ['电银', '是', '100万元', '2018-11-14', '2019-05-14', '76天 ', '国股', '\r\n                      3.21%', '993223.33元']
         # 整理数据并保存
-        self._trimTicketInfo(data)
+        # self._trimTicketInfo(data)
 
 if __name__ == '__main__':
-    SpiderYun().run()
+    x = 1
+    while x<= 41:
+        SpiderYun(x).run()
+        x += 1
