@@ -9,14 +9,14 @@ client = MongoClient()
 class GetData(object):
     _ticket_data = []
 
-    def __new__(cls, db_name, set_name, remain_day="remain_day", *args):
+    def __new__(cls, db_name, set_name, remain_day="remain_day", ID='_id', *args):
         if cls._ticket_data:
             pass
         else:
             cls._ticket_data = cls.get_data(db_name, set_name)
             for i in range(len(cls._ticket_data)):
                 cls._ticket_data[i].pop(remain_day)
-                cls._ticket_data[i].pop("_id")
+                cls._ticket_data[i].pop(ID)
             print("2_ticket_data", type(cls._ticket_data[0]), cls._ticket_data)
         return cls._ticket_data
 
@@ -52,16 +52,16 @@ class AddData(object):
 
         i.pop(self.alter_field)
         # print("删除hou", i)
-        print("ClearData", id(GetData(self.database_name, self.database_set)))
+        # print("ClearData", id(GetData(self.database_name, self.database_set)))
 
         if i in GetData(self.database_name, self.database_set):
-            print('数据存在')
-            print("传入的数据是：", self.new_data)
+            # print('数据存在')
+            # print("传入的数据是：", self.new_data)
 
             self.update_data(i)
 
         else:
-            print('数据不存在')
+            # print('数据不存在')
             self.seva_data()
         pass
 
@@ -70,22 +70,22 @@ class AddData(object):
         db_set = db[self.database_set]
         # myquery修改之前的数据
         my_query = {}
-        my_query["remain_day"] = list(db_set.find(ID))[0]["remain_day"]
-        print("修改之前的数据", my_query)
+        my_query[self.alter_field] = list(db_set.find(ID))[0][self.alter_field]
+        # print("修改之前的数据", my_query)
 
         new_values = {}
-        new_values["$set"] = {"remain_day": self.new_data["remain_day"]}
-        print("新数据为", new_values)
+        new_values["$set"] = {self.alter_field: self.new_data["remain_day"]}
+        # print("新数据为", new_values)
         db_set.update_one(my_query, new_values)
 
         after_query = db_set.find(ID)
-        print("修改之后的数据", after_query[0])
+        # print("修改之后的数据", after_query[0])
 
     def seva_data(self):
         db = client[self.database_name]
         db_set = db[self.database_set]
-        db_set.insert_one(self.new_data)
-
+        post_id = db_set.insert_one(self.new_data).inserted_id
+        print(post_id)
 
 
 
