@@ -16,6 +16,7 @@ class GetData(object):
             cls._ticket_data = cls.get_data(db_name, set_name)
             for i in range(len(cls._ticket_data)):
                 cls._ticket_data[i].pop(remain_day)
+                cls._ticket_data[i].pop("_id")
             print("2_ticket_data", type(cls._ticket_data[0]), cls._ticket_data)
         return cls._ticket_data
 
@@ -28,7 +29,10 @@ class GetData(object):
         return ticket_data
 
 class AddData(object):
-
+    '''
+    通过除【remain_day（剩余天数），_id】字段之外的全部字段来判断数据库是否存在此数据，
+    如果存在修改remain_day字段，不存在新建保存到数据库
+    '''
     def __init__(self, database_name, database_set, new_data, alter_field):
         '''
         
@@ -54,13 +58,11 @@ class AddData(object):
             print('数据存在')
             print("传入的数据是：", self.new_data)
 
-            id_set = i["_id"]
-            print("new_data的ID", id_set)
-
-            self.update_data(id_set)
+            self.update_data(i)
 
         else:
             print('数据不存在')
+            self.seva_data()
         pass
 
     def update_data(self, ID):
@@ -68,19 +70,21 @@ class AddData(object):
         db_set = db[self.database_set]
         # myquery修改之前的数据
         my_query = {}
-        my_query["remain_day"] = list(db_set.find({"_id": ObjectId(ID)}))[0]["remain_day"]
+        my_query["remain_day"] = list(db_set.find(ID))[0]["remain_day"]
         print("修改之前的数据", my_query)
 
         new_values = {}
         new_values["$set"] = {"remain_day": self.new_data["remain_day"]}
         print("新数据为", new_values)
         db_set.update_one(my_query, new_values)
-        after_query = db_set.find({"_id": ID})
-        print("修改之后的数据", after_query)
+
+        after_query = db_set.find(ID)
+        print("修改之后的数据", after_query[0])
 
     def seva_data(self):
-        pass
-    
+        db = client[self.database_name]
+        db_set = db[self.database_set]
+        db_set.insert_one(self.new_data)
 
 
 
@@ -89,7 +93,6 @@ if __name__ == '__main__':
     database_name  = "YCKT_DATA"         # 数据库名称
     database_set = "ticket_INFO_YPJ"   # 数据表名称
     data = {
-        "_id" : ObjectId("5c78e7f686676643bccb22f9"),
         "bill_type" : "电银",
         "transferability" : "是",
         "bank_type" : "其他",
@@ -98,8 +101,8 @@ if __name__ == '__main__':
         "end_time" : "2020-01-30",
         "bill_sum" : "100",
         "send_date" : "2019-03-01",
-        "accept_bank" : "西双版纳国际旅游度假区开发有限公司",
-        "remain_day" : "888",
+        "accept_bank" : "西双版纳国际旅游度假区开发有限",
+        "remain_day" : "8890",
         "start_time" : "2019-01-30"
         }
     remain_day = "remain_day"
@@ -107,6 +110,6 @@ if __name__ == '__main__':
     # i = data.pop(remain_day)
     # print(data)
     # print(ObjectId('5c78e7f386676643bccb22e6'))
-    while True:
-        AddData(database_name, database_set, data, remain_day).judge_data()
-        sleep(0.5)
+    # while True:
+    AddData(database_name, database_set, data, remain_day).judge_data()
+    sleep(0.5)
