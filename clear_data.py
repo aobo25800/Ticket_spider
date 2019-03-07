@@ -1,5 +1,7 @@
+import copy
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+
 from time import sleep
 
 client = MongoClient()
@@ -7,11 +9,13 @@ client = MongoClient()
 class GetData(object):
     _ticket_data = []
 
-    def __new__(cls, db_name, set_name, *args):
+    def __new__(cls, db_name, set_name, remain_day="remain_day", *args):
         if cls._ticket_data:
             pass
         else:
             cls._ticket_data = cls.get_data(db_name, set_name)
+            for i in range(len(cls._ticket_data)):
+                cls._ticket_data[i].pop(remain_day)
             print("2_ticket_data", type(cls._ticket_data[0]), cls._ticket_data)
         return cls._ticket_data
 
@@ -40,11 +44,19 @@ class AddData(object):
 
     def judge_data(self):
         '''判断数据是否存在，存在pass，不存在写入'''
-        i = self.new_data.pop(self.alter_field)
+        i = copy.deepcopy(self.new_data)
+
+        i.pop(self.alter_field)
+        # print("删除hou", i)
         print("ClearData", id(GetData(self.database_name, self.database_set)))
+
         if i in GetData(self.database_name, self.database_set):
             print('数据存在')
+            print("传入的数据是：", self.new_data)
+
             id_set = i["_id"]
+            print("new_data的ID", id_set)
+
             self.update_data(id_set)
 
         else:
@@ -55,12 +67,20 @@ class AddData(object):
         db = client[self.database_name]
         db_set = db[self.database_set]
         # myquery修改之前的数据
-        my_query = db_set.find({"_id": ID})
+        my_query = {}
+        my_query["remain_day"] = list(db_set.find({"_id": ObjectId(ID)}))[0]["remain_day"]
         print("修改之前的数据", my_query)
-        new_values = self.new_data
+
+        new_values = {}
+        new_values["$set"] = {"remain_day": self.new_data["remain_day"]}
+        print("新数据为", new_values)
         db_set.update_one(my_query, new_values)
         after_query = db_set.find({"_id": ID})
         print("修改之后的数据", after_query)
+
+    def seva_data(self):
+        pass
+    
 
 
 
@@ -79,14 +99,14 @@ if __name__ == '__main__':
         "bill_sum" : "100",
         "send_date" : "2019-03-01",
         "accept_bank" : "西双版纳国际旅游度假区开发有限公司",
-        "remain_day" : "335",
+        "remain_day" : "888",
         "start_time" : "2019-01-30"
         }
     remain_day = "remain_day"
 
-    i = data.pop(remain_day)
-    print(data)
+    # i = data.pop(remain_day)
+    # print(data)
     # print(ObjectId('5c78e7f386676643bccb22e6'))
-    # while True:
-    #     AddData(database_name, database_set, data, remain_day).judge_data()
-    #     sleep(0.5)
+    while True:
+        AddData(database_name, database_set, data, remain_day).judge_data()
+        sleep(0.5)
