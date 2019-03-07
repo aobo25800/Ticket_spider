@@ -4,10 +4,11 @@ import copy
 from time import sleep
 from pymongo import MongoClient
 from lxml import etree
+import clear_data
 
 
-client = MongoClient()
-db = client.YCKT_DATA
+# client = MongoClient()
+# db = client.YCKT_DATA
 
 class SpiderYun(object):
 
@@ -18,7 +19,7 @@ class SpiderYun(object):
         self.headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"}
         self.url_all_ticket = 'http://www.cpiaoju.com/draft?&page=%s' % self.num
         self.url_base = 'http://www.cpiaoju.com'
-        self.ticket_INFO = db.ticket_INFO_YPJ
+        # self.ticket_INFO = db.ticket_INFO_YPJ
 
     def _getTicketUrl(self):
         '''获取票据的链接'''
@@ -125,14 +126,16 @@ class SpiderYun(object):
 
 
         print("整理好的数据为：", new_data_dict)
-        self._ticketSave(new_data_dict)
+
+        clear_data.AddData(database_name='YCKT_DATA', database_set='ticket_INFO_YPJ', new_data=new_data_dict, alter_field='remain_day').judge_data()
+        # self._ticketSave(new_data_dict)
 
         # return new_data_list
 
-    def _ticketSave(self, ticket_DATA):
-        '''保存信息'''
-        post_id = self.ticket_INFO.insert_one(ticket_DATA).inserted_id
-        print("post id is ", post_id)
+    # def _ticketSave(self, ticket_DATA):
+    #     '''保存信息'''
+    #     post_id = self.ticket_INFO.insert_one(ticket_DATA).inserted_id
+    #     print("post id is ", post_id)
 
 
     def run(self):
@@ -150,7 +153,7 @@ class SpiderYun(object):
 
 if __name__ == '__main__':
     x = 1
-    while x<= 44:
+    while x<= 1:
         SpiderYun(x).run()
         x += 1
 
