@@ -152,8 +152,8 @@ class SpiderYun(object):
         # self._trimTicketInfo(data)
 
 if __name__ == '__main__':
-    x = 1
-    while x<= 1:
+    x = 67
+    while x<= 68:
         SpiderYun(x).run()
         x += 1
 
