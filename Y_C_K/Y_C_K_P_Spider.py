@@ -60,14 +60,14 @@ class GetTicketInfo(object):
         workbook = xlwt.Workbook(encoding='ascii')
         worksheet = workbook.add_sheet('Ticket_info')
         # billType
-        # billAmount
-        # bankTypeName
-        # accepter
+        # billAmount---票据金额
+        # bankTypeName---承兑行类型
+        # accepter----承兑人全称
         # endDate
-        # endDays
-        # annualizedRaise
-        # outTenPrice
-        # endorseCount
+        # endDays---剩余天数
+        # annualizedRaise---年化利率
+        # outTenPrice---每十万扣款
+        # endorseCount---背书次数
         # discrepancy
 
         for i in range(len(ticketInfo)):
