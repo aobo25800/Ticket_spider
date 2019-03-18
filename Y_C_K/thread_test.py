@@ -1,7 +1,4 @@
-import requests
-import json
-import _thread
-import time
+import queue
 import threading
 import random
 from pymongo import MongoClient
@@ -15,8 +12,8 @@ db = client.YCKT_DATA
 
 class GetTicketInfo(object):
 
-    def __init__(self, ):
-        # threading.Thread.__init__(self)
+    def __init__(self, page):
+        self.page = page
         print("线程号：")
         print(threading.currentThread())
         print(threading.currentThread().ident)
@@ -24,7 +21,7 @@ class GetTicketInfo(object):
     def ticketIdList(self):
         billId = []
         for i in range(5):
-            a = random.randint(0, 100)
+            a = self.page
             billId.append(a)
 
         self.getInfo(billId)
@@ -37,29 +34,6 @@ class GetTicketInfo(object):
             ticketInfo.append(url)
         print(ticketInfo)
         print(threading.current_thread())
-    #     self.writeMongodb(ticketInfo)
-    #
-    #
-    # def writeMongodb(self, ticketInfo):
-    #     for i in range(len(ticketInfo)):
-    #         ticket_DATA = dict(
-    #             billType=ticketInfo[i]["billType"],
-    #             endDate=ticketInfo[i]["endDate"],
-    #             outTenPrice=ticketInfo[i]["outTenPrice"],
-    #             billAmount=ticketInfo[i]["billAmount"],
-    #             endDays=ticketInfo[i]["endDays"],
-    #             endorseCount=ticketInfo[i]["endorseCount"],
-    #             bankTypeName=ticketInfo[i]["bankTypeName"],
-    #             annualizedRaise=ticketInfo[i]["annualizedRaise"],
-    #             accepter=ticketInfo[i]["accepter"],
-    #             belongEbankAccountName=ticketInfo[i]["belongEbankAccountName"],
-    #             onsaleTime=ticketInfo[i]["onsaleTime"],
-    #             billCode=ticketInfo[i]["billCode"]
-    #         )
-    #
-    #         ticket_INFO = db.ticket_INFO
-    #         post_id = ticket_INFO.insert_one(ticket_DATA).inserted_id
-    #         print("post id is ", post_id)
 
     def runAll(self):
         pass

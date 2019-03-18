@@ -1,6 +1,7 @@
 import requests
 import re
 import copy
+import time
 from time import sleep
 from pymongo import MongoClient
 from lxml import etree
@@ -26,18 +27,12 @@ class SpiderYun(object):
         detail_html = self._parseUrl(self.url_all_ticket)
         detail_html_elements = etree.HTML(detail_html)
         elements_list = detail_html_elements.xpath("//div[@class='R_borderG clearfix R_ulcont']//a/@href")
-        # elements_title_list = detail_html_elements.xpath("//div[@class='R_borderG clearfix R_ulcont']//a/@href")
-        # print("elements_title_list信息为", elements_title_list)
-        # print("默认返回的URL路径信息：", elements_list, "\n\t\t长度为：%s", len(elements_list))
         elements_set = set(elements_list)
-        # print("使用set去重结果：", elements_set, "\n\t\t长度为：%s", len(elements_set))
         elements_set_list = list(elements_set)
-        # print("去重后的URL路径列表：", elements_set_list, "\n\t\t长度为：%s", len(elements_set_list))
         return elements_set_list
 
     def _parseUrl(self,url):
         '''发送请求，获取响应'''
-        # print(url)
         response = requests.get(url, headers=self.headers,  timeout=20)
         return response.content
 
@@ -47,7 +42,6 @@ class SpiderYun(object):
         for ticket_path in url_list:
             group_info_url = self.url_base + ticket_path
             url_info.append(group_info_url)
-        # print("组装好的URL地址数量为：", len(url_info), "组装好的URL地址:", url_info)
         return url_info
 
     def _getTicketInfo(self, ticket_url):
@@ -56,23 +50,18 @@ class SpiderYun(object):
             detail_html = self._parseUrl(parse_url)
             detail_html_elements = etree.HTML(detail_html)
             detail_title_data = detail_html_elements.xpath("//div[@class='R_seulp1 R_fontSize3 R_marginBot']//text()")
-            # print("detail_title_data信息为", detail_title_data, "类型", type(detail_title_data))
             detail_title_data = [x.strip() for x in detail_title_data if x.strip()!='']
-            # print("mytest信息为", detail_title_data, "类型", type(detail_title_data))
 
             list_data = []
             for i in range(1, 10):
-
                 html_data = detail_html_elements.xpath("/html/body/div[4]/div[2]/dl[%d]//text()" % i)
-                # print(html_data)
                 detail_data = [x.strip() for x in html_data if x.strip() != '']
 
                 if "电商" in detail_data or '议价' in detail_data:
-                    list_data = []
-                    break
-
+                    continue
                 else:
                     list_data.append(detail_data)
+
             list_data_info = []
             for i in list_data:
                 list_data_info.append(i[1])
@@ -81,7 +70,6 @@ class SpiderYun(object):
                 list_data_info.extend(detail_title_data)
                 if len(list_data_info) == 11:
                     self._trimTicketInfo(list_data_info)
-                # return
             else:
                 continue
 
@@ -128,33 +116,27 @@ class SpiderYun(object):
         print("整理好的数据为：", new_data_dict)
 
         clear_data.AddData(database_name='YCKT_DATA', database_set='ticket_INFO_YPJ', new_data=new_data_dict, alter_field='remain_day').judge_data()
-        # self._ticketSave(new_data_dict)
 
-        # return new_data_list
-
-    # def _ticketSave(self, ticket_DATA):
-    #     '''保存信息'''
-    #     post_id = self.ticket_INFO.insert_one(ticket_DATA).inserted_id
-    #     print("post id is ", post_id)
 
 
     def run(self):
         '''启动程序'''
-        # while True:
         # 获取ticket路径信息
         ticket_path = self._getTicketUrl()
-        # # 拼接票据URL
+        # 拼接票据URL
         url_list = self._configTicketUrl(ticket_path)
-        # # 获取票据数据
+        # 获取票据数据
         self._getTicketInfo(url_list)
         # data = ['电银', '是', '100万元', '2018-11-14', '2019-05-14', '76天 ', '国股', '\r\n                      3.21%', '993223.33元']
         # 整理数据并保存
         # self._trimTicketInfo(data)
 
 if __name__ == '__main__':
-    x = 67
-    while x<= 68:
+    start_time = time.time()
+    x = 1
+    while x<= 88:
         SpiderYun(x).run()
         x += 1
-
-    # SpiderYun(1).run()
+    print("爬取结束，用时：", time.time() - start_time)
+    # 72页爬取结束，用时： 155.73225140571594
+    # 88页爬取结束，用时： 202.82258200645447
